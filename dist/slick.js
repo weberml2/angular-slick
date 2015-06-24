@@ -28,11 +28,11 @@ angular.module('slick', []).directive('slick', [
         infinite: '@',
         initialSlide: '@',
         lazyLoad: '@',
-        onBeforeChange: '&',
-        onAfterChange: '&',
-        onInit: '&',
-        onReInit: '&',
-        onSetPosition: '&',
+        onBeforeChange: '=',
+        onAfterChange: '=',
+        onInit: '=',
+        onReInit: '=',
+        onSetPosition: '=',
         pauseOnHover: '@',
         pauseOnDotsHover: '@',
         responsive: '=',
@@ -96,9 +96,6 @@ angular.module('slick', []).directive('slick', [
               infinite: scope.infinite !== 'false',
               initialSlide: scope.initialSlide || 0,
               lazyLoad: scope.lazyLoad || 'ondemand',
-              beforeChange: attrs.onBeforeChange ? scope.onBeforeChange : void 0,
-              onReInit: attrs.onReInit ? scope.onReInit : void 0,
-              onSetPosition: attrs.onSetPosition ? scope.onSetPosition : void 0,
               pauseOnHover: scope.pauseOnHover !== 'false',
               responsive: scope.responsive || void 0,
               rtl: scope.rtl === 'true',
@@ -116,23 +113,58 @@ angular.module('slick', []).directive('slick', [
               prevArrow: scope.prevArrow ? $(scope.prevArrow) : void 0,
               nextArrow: scope.nextArrow ? $(scope.nextArrow) : void 0
             });
-            slider.on('init', function (sl) {
+            slider.on('init', function (event, slick) {
               if (attrs.onInit) {
                 scope.onInit();
               }
               if (currentIndex != null) {
-                return sl.slideHandler(currentIndex);
+                return slick.slideHandler(currentIndex);
               }
             });
-            slider.on('afterChange', function (event, slick, currentSlide, nextSlide) {
+            slider.on('reInit', function (event, slick) {
+              if (attrs.onReInit) {
+                return scope.onReInit();
+              }
+            });
+            slider.on('setPosition', function (event, slick) {
+              if (attrs.onSetPosition) {
+                return scope.onSetPosition();
+              }
+            });
+            slider.on('swipe', function (event, slick, direction) {
+              if (attrs.onSwipe) {
+                return scope.onSwipe(direction);
+              }
+            });
+            slider.on('afterChange', function (event, slick, currentSlide) {
               if (scope.onAfterChange) {
-                scope.onAfterChange();
+                scope.onAfterChange(currentSlide);
               }
               if (currentIndex != null) {
                 return scope.$apply(function () {
                   currentIndex = currentSlide;
                   return scope.currentIndex = currentSlide;
                 });
+              }
+            });
+            slider.on('beforeChange', function (event, slick, currentSlide, nextSlide) {
+              if (attrs.onBeforeChange) {
+                return scope.onBeforeChange(currentSlide, nextSlide);
+              }
+            });
+            slider.on('breakpoint', function (event, slick) {
+              if (attrs.onBreakpoint) {
+                return scope.onBreakpoint();
+              }
+            });
+            slider.on('destroy', function (event, slick) {
+              if (attrs.onDestroy) {
+                return scope.onDestroy();
+              }
+            });
+            slider.on('edge', function (event, slick, direction) {
+              if (attrs.onEdge) {
+                return scope.onEdge(direction);
               }
             });
             return scope.$watch('currentIndex', function (newVal, oldVal) {
